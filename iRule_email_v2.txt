@@ -1,0 +1,96 @@
+when ACCESS_POLICY_AGENT_EVENT {
+    
+	if { [ACCESS::policy agent_id] eq "iRule_email_G" } {
+	
+		#set emailoriginale [ split [ HTTP::payload ] ]
+		
+		set emailoriginale [ACCESS::session data get session.logon.last.mail]
+		
+		set decisione [ACCESS::session data get session.display_mail]
+		
+		log local0. "$decisione"
+		
+		set email1 [split $emailoriginale @]
+			
+		set dominio [lindex $email1 1]
+		
+		#log local0. [split $emailoriginale @]
+		
+		set uno "*@"
+		set due "**@"
+		set tre "***@"
+		
+		set chiocciola "@"
+		#set punto "."
+		
+		set vero "0"
+		#set verovero "0"
+		#set male "0"
+		
+		for {set i 0} { $i < [string length $dominio] } {incr i} {
+				if { [string index $dominio $i] == "." } {
+					set vero "1"
+				} 
+	 
+		}
+		
+		#log local0. [llength $email1]
+		
+		
+			if { [llength $email1] == 2 && $vero == 1 } {
+				if { $decisione eq "yes" } {
+					if { [string length [ lindex $email1 0 ] ] > 3 } {
+					
+						set inizio [substr [ lindex $email1 0 ] 0 3 ]
+						
+						set nchar  [expr [string length [ lindex $email1 0 ] ] - 3 ]
+						
+						#log local0. "$nchar"
+						
+						set cifratura ""
+						
+						for { set i 0}  {$i < $nchar} {incr i} {
+						
+							set cifratura $cifratura*
+						}
+						
+						set email $inizio$cifratura@$dominio
+						
+						#log local0. "$email  --- email cifrata"
+					
+					} else {
+					
+						switch [string length [ lindex $email1 0 ] ] {
+							
+							1 {
+								
+								set email $uno$dominio 
+								
+							}
+							
+							2 {
+							
+								set email $due$dominio 
+								
+							}
+							
+							3 {
+							
+								set email $tre$dominio 
+							
+							}
+						}
+					}
+					ACCESS::session data set session.mock.mail "La mail e' stata spedita all'indirizzo: $email"	
+					
+				} else {
+			
+					ACCESS::session data set session.mock.mail "La mail e' stata spedita"
+				}
+			#log local0. "$email --- email cifrata"
+			} else {
+			
+				ACCESS::session data set session.mock.mail "E MAIL NON VALIDA"
+			} 	
+	}
+}
